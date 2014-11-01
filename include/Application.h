@@ -41,6 +41,7 @@ class Application
 
     private:
 
+        void handleMouseEvent(sf::Event event);
         void handleKeyPressedEvent(sf::Event event);
 
         void drawInfo() noexcept;
@@ -67,6 +68,10 @@ class Application
         // Audio
         sf::Sound m_sound;
         sf::SoundBuffer m_photoBuffer;
+
+        // Mouse
+        bool m_isMousePressed;
+        sf::Rect<int> m_mouseSelection;
 
         // Time
         sf::Clock m_clock;

@@ -23,6 +23,8 @@ Application::Application(sf::RenderWindow& window):
     m_sound(),
     m_photoBuffer(),
     m_clock(),
+    m_isMousePressed(false),
+    m_mouseSelection(),
     m_lastTime(),
     m_doAction(false)
 {
@@ -47,6 +49,10 @@ void Application::handleEvent()
         case sf::Event::Closed:
             m_window.close();
             break;
+        case sf::Event::MouseMoved:
+        case sf::Event::MouseButtonPressed:
+        case sf::Event::MouseButtonReleased:
+            handleMouseEvent(event);
         case sf::Event::KeyPressed:
             handleKeyPressedEvent(event);
             break;
@@ -71,11 +77,42 @@ void Application::update()
 void Application::draw()
 {
     m_window.draw(m_fractaleSprite);
+    if(m_isMousePressed)
+    {
+        sf::RectangleShape rect(sf::Vector2f(m_mouseSelection.width, m_mouseSelection.height));
+        rect.setPosition(m_mouseSelection.left, m_mouseSelection.top);
+        rect.setFillColor(sf::Color::Transparent);
+        rect.setOutlineColor(sf::Color(100,100,100));
+        rect.setOutlineThickness(2);
+        m_window.draw(rect);
+    }
     drawInfo();
 }
 
 // PRIVATE
-
+void Application::handleMouseEvent(sf::Event event)
+{
+    switch(event.type)
+    {
+    case sf::Event::MouseButtonPressed:
+        m_isMousePressed = true;
+        m_mouseSelection.left = event.mouseButton.x;
+        m_mouseSelection.top = event.mouseButton.y;
+        break;
+    case sf::Event::MouseButtonReleased:
+        m_isMousePressed = false;
+        break;
+    case sf::Event::MouseMoved:
+        if(m_isMousePressed)
+        {
+            m_mouseSelection.width  = event.mouseMove.x - m_mouseSelection.left;
+            m_mouseSelection.height = event.mouseMove.y - m_mouseSelection.top;
+        }
+        break;
+    default:
+        break;
+    }
+}
 void Application::handleKeyPressedEvent(sf::Event event)
 {
     sf::Time time;
