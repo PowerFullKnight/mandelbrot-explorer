@@ -21,6 +21,6 @@ int main()
         app.draw();
         window.display();
     }
-    return 0;
 
+    return 0;
 }

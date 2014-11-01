@@ -23,7 +23,7 @@ typedef double real;
 
 class Render
 {
-    sf::Uint8* m_data;
+    std::vector<sf::Uint8> m_data;
     sf::Vector2u m_imageSize;
     sf::Texture m_texture;
 

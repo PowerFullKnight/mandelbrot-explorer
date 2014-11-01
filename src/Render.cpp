@@ -1,7 +1,6 @@
 #include "Render.h"
 
 // Std include
-#include <cstring>       // std::memset
 #include <functional>    // std::bind
 #include <stdexcept>
 
@@ -11,7 +10,7 @@
 
 
 Render::Render(const unsigned width, const unsigned height):
-    m_data(nullptr),
+    m_data(width * height * 4, 0),
     m_imageSize(width, height),
     m_texture(),
     m_normalizedPosition(0.4, 0.5),
@@ -22,9 +21,6 @@ Render::Render(const unsigned width, const unsigned height):
     m_dataMutex(),
     m_threadRun(false)
 {
-    m_data = new sf::Uint8[m_imageSize.x * m_imageSize.y * 4];
-    std::memset(m_data, 0, m_imageSize.x * m_imageSize.y * 4); // Fill with zero
-
     if(m_texture.create(m_imageSize.x, m_imageSize.y))
     {
         m_texture.setSmooth(false);
@@ -68,7 +64,6 @@ Render::~Render()
     for(auto thread : m_threads){
         delete thread;
     }
-    delete[] m_data;
 }
 
 void Render::setZoom(double zoom) noexcept
@@ -110,7 +105,7 @@ sf::Vector2<double> Render::getNormalizedPosition() const noexcept
 
 const sf::Texture& Render::getTexture()noexcept
 {
-    m_texture.update(m_data);
+    m_texture.update(m_data.data());
     return m_texture;
 }
 

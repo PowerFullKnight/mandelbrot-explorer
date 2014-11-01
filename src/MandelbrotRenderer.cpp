@@ -3,7 +3,7 @@
 // Std include
 #include <cstring> // For std::memset
 
-void mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const double zoom,
+void mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
                         const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition,
                         sf::Vector2u begin, sf::Vector2u end, sf::Mutex& dataMutex, bool* isRunning)
 {
@@ -20,8 +20,7 @@ void mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const dou
     const sf::Uint64 fractal_width  = static_cast<sf::Uint64>(dataSize.x * zoom);
     const sf::Uint64 fractal_height = static_cast<sf::Uint64>(dataSize.y * zoom);
 
-    sf::Uint8 *buff = new sf::Uint8[(end.x - begin.x) * (end.y - begin.y) * 4];
-    std::memset(buff, 0, (end.x - begin.x) * (end.y - begin.y) * 4);
+    std::vector<sf::Uint8> buff((end.x - begin.x) * (end.y - begin.y) * 4, 0);
 
     for(unsigned x(begin.x); x < end.x && *isRunning; ++x)
     {
@@ -68,31 +67,10 @@ void mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const dou
                 buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 2] = b;
                 buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 3] = static_cast<sf::Uint8>(255);
             }
-
-            /*dataMutex.lock();
-            if (i == resolution)
-            {
-                data[(y * dataSize.x + x) * 4 + 0] = 0;
-                data[(y * dataSize.x + x)* 4 + 1] = 54;
-                data[(y * dataSize.x + x) * 4 + 2] = 76;
-                data[(y * dataSize.x + x) * 4 + 3] = 255;
-            }
-            else
-            {
-                int val = i * 255 / resolution;
-                data[(y * dataSize.x + x) * 4 + 0] = static_cast<sf::Uint8>(val);
-                data[(y * dataSize.x + x) * 4 + 1] = 0;
-                data[(y * dataSize.x + x) * 4 + 2] = 0;
-                data[(y * dataSize.x + x) * 4 + 3] = 255;
-            }
-            dataMutex.unlock();*/
         }
     }
 
-    // Done also if isRunning = false
-
     if(!(*isRunning)){
-        delete[] buff;
         return;
     }
 
@@ -112,10 +90,9 @@ void mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const dou
 
     dataMutex.unlock();
 
-    delete[] buff;
 }
 
-void gmp_mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const double zoom,
+void gmp_mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
                         const unsigned detailLevel, const sf::Vector2<mpf_class>& normalizedPosition,
                         sf::Vector2u begin, sf::Vector2u end, sf::Mutex& dataMutex, bool* isRunning)
 {
@@ -133,8 +110,7 @@ void gmp_mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const
     const mpz_class fractal_width  (dataSize.x * zoom);
     const mpz_class fractal_height (dataSize.y * zoom);
 
-    sf::Uint8 *buff = new sf::Uint8[(end.x - begin.x) * (end.y - begin.y) * 4];
-    std::memset(buff, 0, (end.x - begin.x) * (end.y - begin.y) * 4);
+    std::vector<sf::Uint8> buff((end.x - begin.x) * (end.y - begin.y) * 4, 0);
 
     for(unsigned x(begin.x); x < end.x && *isRunning; ++x)
     {
@@ -198,7 +174,6 @@ void gmp_mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const
     // Done also if isRunning = false
 
     if(!(*isRunning)){
-        delete[] buff;
         return;
     }
 
@@ -215,8 +190,5 @@ void gmp_mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const
         }
     }
 
-
     dataMutex.unlock();
-
-    delete[] buff;
 }

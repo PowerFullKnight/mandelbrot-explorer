@@ -1,6 +1,9 @@
 #ifndef MANDELBROTRENDERER_H
 #define MANDELBROTRENDERER_H
 
+// Std include
+#include <vector>
+
 // Sfml include
 // - System
 #include <SFML/System/Vector2.hpp>
@@ -10,11 +13,11 @@
 // Gmp include
 #include <gmpxx.h>
 
-void mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const double zoom,
+void mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
                         const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition,
                         sf::Vector2u begin, sf::Vector2u end, sf::Mutex& dataMutex, bool* isRunning);
 
-void gmp_mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const double zoom,
+void gmp_mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
                         const unsigned detailLevel, const sf::Vector2<mpf_class>& normalizedPosition,
                         sf::Vector2u begin, sf::Vector2u end, sf::Mutex& dataMutex, bool* isRunning);
 
