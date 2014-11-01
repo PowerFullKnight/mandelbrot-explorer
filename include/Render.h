@@ -1,17 +1,22 @@
 #ifndef RENDER_H
 #define RENDER_H
 
+// Std include
 #include <vector>
-#include <memory>
 
+// Sfml include
+// - Graphics
+#include <SFML/Graphics/Texture.hpp>
+
+// - System
 #include <SFML/System/Thread.hpp>
 #include <SFML/System/Mutex.hpp>
 #include <SFML/System/Vector2.hpp>
-#include <SFML/Graphics/Image.hpp>
-#include <SFML/Graphics/Texture.hpp>
 
+// Gmp include
 #include <gmpxx.h>
 
+// Personal include
 #include "RenderThread.h"
 
 typedef double real;

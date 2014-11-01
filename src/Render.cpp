@@ -1,10 +1,11 @@
 #include "Render.h"
 
+// Std include
 #include <cstring>       // std::memset
 #include <functional>    // std::bind
 #include <stdexcept>
-#include <iostream>
 
+// Personal include
 #include "RenderThread.h"
 #include "MandelbrotRenderer.h"
 
@@ -68,7 +69,6 @@ Render::~Render()
         delete thread;
     }
     delete[] m_data;
-    std::cout << "If you show this message, there is a little problem with the app ! :p";
 }
 
 void Render::setZoom(double zoom) noexcept

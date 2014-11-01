@@ -1,5 +1,9 @@
+// Sfml include
+// Graphics & window
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/VideoMode.hpp>
+
+// Personal include
 #include "Application.h"
 
 int main()

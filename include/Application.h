@@ -1,15 +1,24 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+// Sfml include
+// - Graphics
 #include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Font.hpp>
-#include <SFML/System/Clock.hpp>
-#include <SFML/System/Time.hpp>
+
+// - Window
+#include <SFML/Window/Event.hpp>
+
+// - Audio
 #include<SFML/Audio/Sound.hpp>
 #include<SFML/Audio/SoundBuffer.hpp>
 
+// - System
+#include <SFML/System/Clock.hpp>
+#include <SFML/System/Time.hpp>
+
+// Personal include
 #include "Render.h"
 
 class Application
@@ -20,6 +29,7 @@ class Application
         Right,
         Left
     };
+
     public:
         Application(sf::RenderWindow& window);
 
@@ -54,6 +64,7 @@ class Application
         sf::Font m_font;
         bool m_showText;
 
+        // Audio
         sf::Sound m_sound;
         sf::SoundBuffer m_photoBuffer;
 

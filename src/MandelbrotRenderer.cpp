@@ -1,6 +1,7 @@
 #include "MandelbrotRenderer.h"
 
-#include <cstring>
+// Std include
+#include <cstring> // For std::memset
 
 void mandelbrotRenderer(sf::Uint8* data, const sf::Vector2u& dataSize, const double zoom,
                         const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition,

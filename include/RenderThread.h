@@ -1,6 +1,8 @@
 #ifndef RENDERTHREAD_H_INCLUDED
 #define RENDERTHREAD_H_INCLUDED
 
+// Sfml include
+// - System
 #include <SFML/System/Thread.hpp>
 #include <SFML/System/Mutex.hpp>
 #include <SFML/System/Vector2.hpp>
@@ -9,7 +11,7 @@
 class RenderThread : public sf::NonCopyable
 {
 public:
-    RenderThread(unsigned id, sf::Vector2u begin_, sf::Vector2u end_):
+    RenderThread(const unsigned id, sf::Vector2u begin_, sf::Vector2u end_):
         m_id(id), m_thread(nullptr), m_begin(begin_), m_end(end_), m_run(false)
     {}
 
@@ -44,10 +46,10 @@ public:
     sf::Vector2u end() const { return m_end; }
 
 private:
-    unsigned m_id;
+    const unsigned m_id;
     sf::Thread *m_thread;
-    sf::Vector2u m_begin;
-    sf::Vector2u m_end;
+    const sf::Vector2u m_begin;
+    const sf::Vector2u m_end;
     bool m_run;
 };
 

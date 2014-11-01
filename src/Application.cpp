@@ -1,13 +1,17 @@
 #include "Application.h"
 
+// Std include
 #include <sstream>
+#include <stdexcept>
 #include <cstdlib> // for save screen
 #include <ctime> // for save screen
-#include <stdexcept>
 
-
+// Sfml include
+// - Graphics
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
+
+// System
 #include <SFML/System/Sleep.hpp>
 
 Application::Application(sf::RenderWindow& window):
