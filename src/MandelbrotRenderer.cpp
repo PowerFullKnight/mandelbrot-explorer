@@ -46,12 +46,13 @@ void mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSi
             }
             while (z_r * z_r + z_i * z_i < 4 && i < resolution);
 
+            const unsigned offset = ((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4;
             if (i == resolution)
             {
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 0] = static_cast<sf::Uint8>(0);
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x))* 4 + 1] = static_cast<sf::Uint8>(0);
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 2] = static_cast<sf::Uint8>(0);
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 3] = static_cast<sf::Uint8>(255);
+                buff[offset + 0] = static_cast<sf::Uint8>(0);
+                buff[offset + 1] = static_cast<sf::Uint8>(0);
+                buff[offset + 2] = static_cast<sf::Uint8>(0);
+                buff[offset + 3] = static_cast<sf::Uint8>(255);
             }
             else
             {
@@ -62,10 +63,10 @@ void mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSi
                 sf::Uint8 g = static_cast<sf::Uint8>(15*(1-t)*(1-t)*t*t*255);
                 sf::Uint8 b = static_cast<sf::Uint8>(8.5*(1-t)*(1-t)*(1-t)*t*255);
 
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 0] = r;
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 1] = g;
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 2] = b;
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 3] = static_cast<sf::Uint8>(255);
+                buff[offset + 0] = r;
+                buff[offset + 1] = g;
+                buff[offset + 2] = b;
+                buff[offset + 3] = static_cast<sf::Uint8>(255);
             }
         }
     }
