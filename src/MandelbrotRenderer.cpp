@@ -37,19 +37,19 @@ void monoThreadedMandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vect
             double z_i = 0;
 
             unsigned i = 0;
-            double zii = z_i * z_i;
-            double zrr = z_r * z_r;
+            double zi2 = z_i * z_i;
+            double zr2 = z_r * z_r;
             do
             {
-                z_i = 2 * z_r * z_i + c_i;
-                z_r = zrr - zii + c_r;
+                z_i = (z_r + z_r) * z_i + c_i;
+                z_r = zr2 - zi2 + c_r;
 
-                zii = z_i * z_i;
-                zrr = z_r * z_r;
+                zi2 = z_i * z_i;
+                zr2 = z_r * z_r;
 
                 i++;
             }
-            while (zii + zrr < 4 && i < resolution);
+            while (zi2 + zr2 < 4 && i < resolution);
 
             const unsigned offset = (y * dataSize.x + x) * 4;
             if (i == resolution)
