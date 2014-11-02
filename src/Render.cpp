@@ -13,6 +13,7 @@ Render::Render(const unsigned width, const unsigned height):
     m_data(width * height * 4, 0),
     m_imageSize(width, height),
     m_texture(),
+    m_isRenderingFinished(true),
     m_normalizedPosition(0.4, 0.5),
     m_gmp_normalizedPosition(),
     m_detailLevel(30),
@@ -30,7 +31,7 @@ Render::Render(const unsigned width, const unsigned height):
         throw std::runtime_error("Texture is too big for your computer.");
     }
 
-    initialize4Thread();
+    initialize1Thread();
 }
 
 Render::Render(const sf::Vector2u size):
@@ -39,6 +40,17 @@ Render::Render(const sf::Vector2u size):
 }
 
 // PRIVATE
+void Render::initialize1Thread()
+{
+    m_threads.clear();
+
+    const unsigned w = m_imageSize.x;
+    const unsigned h = m_imageSize.y;
+
+    m_threads.push_back( new RenderThread(0, sf::Vector2u(0, 0), sf::Vector2u(0, 0)));
+    m_threads[0]->setFunc(std::bind(&Render::performRenderingImplMonothreaded, this));
+}
+
 void Render::initialize4Thread()
 {
     m_threads.clear();
@@ -109,6 +121,13 @@ const sf::Texture& Render::getTexture()noexcept
     return m_texture;
 }
 
+bool Render::isRenderingFinished() const noexcept
+{
+    if(m_threads.size() > 1)
+        return true;
+    return m_isRenderingFinished;
+}
+
 void Render::performRendering() noexcept
 {
     terminateAllThread();
@@ -138,6 +157,11 @@ void Render::performRenderingImpl(sf::Vector2u begin, sf::Vector2u end) noexcept
     else{
         mandelbrotRenderer(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, begin, end, m_dataMutex, &m_threadRun);
     }
+}
+
+void Render::performRenderingImplMonothreaded() noexcept
+{
+    monoThreadedMandelbrotRenderer(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
 }
 
 void Render::launchAllThread()

@@ -1,7 +1,77 @@
 #include "MandelbrotRenderer.h"
 
-// Std include
-#include <cstring> // For std::memset
+#include "omp.h"
+
+
+void monoThreadedMandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
+                        const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition, bool& isRunning, bool &finished)
+{
+    finished = false;
+
+    const unsigned &resolution = detailLevel;
+
+    const static double fractal_left = -2.1;
+//    const static double fractal_right = 0.6; -> unused
+    const static double fractal_bottom = -1.2;
+    const static double fractal_top = 1.2;
+
+    const double zoom_y = zoom * dataSize.y / (fractal_top - fractal_bottom);
+    const double zoom_x = zoom_y;
+
+    const sf::Uint64 fractal_width  = static_cast<sf::Uint64>(dataSize.x * zoom);
+    const sf::Uint64 fractal_height = static_cast<sf::Uint64>(dataSize.y * zoom);
+
+    #pragma omp parallel for num_threads(8) schedule(dynamic,32)
+    for(unsigned x = 0; x < dataSize.x; ++x)
+    {
+        for(unsigned y = 0; y < dataSize.y && isRunning; ++y)
+        {
+            const sf::Uint64 fractal_x = static_cast<sf::Uint64>(
+                                        static_cast<double>(fractal_width) * normalizedPosition.x - dataSize.x / 2 + x );
+            const sf::Uint64 fractal_y = static_cast<sf::Uint64>(
+                                        static_cast<double>(fractal_height) * normalizedPosition.y - dataSize.y / 2 + y);
+
+            double c_r = static_cast<double>(fractal_x) / static_cast<double>(zoom_x) + fractal_left;
+            double c_i = static_cast<double>(fractal_y) / static_cast<double>(zoom_y) + fractal_bottom;
+            double z_r = 0;
+            double z_i = 0;
+
+            unsigned i = 0;
+            do
+            {
+                double tmp = z_r;
+                z_r = z_r * z_r - z_i * z_i + c_r;
+                z_i = 2 * tmp * z_i + c_i;
+                i++;
+            }
+            while (z_r * z_r + z_i * z_i < 4 && i < resolution);
+
+            const unsigned offset = (y * dataSize.x + x) * 4;
+            if (i == resolution)
+            {
+                data[offset + 0] = static_cast<sf::Uint8>(0);
+                data[offset + 1] = static_cast<sf::Uint8>(0);
+                data[offset + 2] = static_cast<sf::Uint8>(0);
+                data[offset + 3] = static_cast<sf::Uint8>(255);
+            }
+            else
+            {
+                double t = static_cast<double>(i)/static_cast<double>(resolution);
+
+                // Use smooth polynomials for r, g, b
+                sf::Uint8 r = static_cast<sf::Uint8>(9*(1-t)*t*t*t*255);
+                sf::Uint8 g = static_cast<sf::Uint8>(15*(1-t)*(1-t)*t*t*255);
+                sf::Uint8 b = static_cast<sf::Uint8>(8.5*(1-t)*(1-t)*(1-t)*t*255);
+
+                data[offset + 0] = r;
+                data[offset + 1] = g;
+                data[offset + 2] = b;
+                data[offset + 3] = static_cast<sf::Uint8>(255);
+            }
+        }
+    }
+    finished = true;
+}
 
 void mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
                         const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition,

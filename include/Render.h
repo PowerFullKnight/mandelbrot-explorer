@@ -26,6 +26,7 @@ class Render
     std::vector<sf::Uint8> m_data;
     sf::Vector2u m_imageSize;
     sf::Texture m_texture;
+    bool m_isRenderingFinished;
 
     sf::Vector2<double> m_normalizedPosition;
     sf::Vector2<mpf_class> m_gmp_normalizedPosition;
@@ -37,10 +38,12 @@ class Render
     bool m_threadRun;
 
     void performRenderingImpl(sf::Vector2u begin, sf::Vector2u end) noexcept;
+    void performRenderingImplMonothreaded() noexcept;
     void launchAllThread();
     void terminateAllThread();
 
     void initialize4Thread();
+    void initialize1Thread();
 
 public:
 
@@ -63,6 +66,8 @@ public:
     const sf::Texture& getTexture() noexcept;
 
     double getGmpRenderBeginning() const noexcept;
+
+    bool isRenderingFinished() const noexcept;
 
     void performRendering() noexcept;
     void abort() noexcept;

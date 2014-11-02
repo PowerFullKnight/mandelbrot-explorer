@@ -13,6 +13,9 @@
 // Gmp include
 #include <gmpxx.h>
 
+void monoThreadedMandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
+                        const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition, bool& isRunning, bool &finished);
+
 void mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
                         const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition,
                         sf::Vector2u begin, sf::Vector2u end, sf::Mutex& dataMutex, bool* isRunning);

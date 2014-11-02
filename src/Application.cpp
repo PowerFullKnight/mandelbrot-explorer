@@ -64,7 +64,9 @@ void Application::handleEvent()
 
 void Application::update()
 {
-    m_fractaleSprite.setTexture(m_fractaleRenderer.getTexture());
+    if(m_fractaleRenderer.isRenderingFinished())
+        m_fractaleSprite.setTexture(m_fractaleRenderer.getTexture());
+
     if(!m_doAction){
         if(m_clock.getElapsedTime() > sf::seconds(0.5))
         {
