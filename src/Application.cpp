@@ -22,9 +22,9 @@ Application::Application(sf::RenderWindow& window):
     m_showText(true),
     m_sound(),
     m_photoBuffer(),
-    m_clock(),
     m_isMousePressed(false),
     m_mouseSelection(),
+    m_clock(),
     m_lastTime(),
     m_doAction(false)
 {
