@@ -53,6 +53,7 @@ void Application::handleEvent()
         case sf::Event::MouseButtonPressed:
         case sf::Event::MouseButtonReleased:
             handleMouseEvent(event);
+            break;
         case sf::Event::KeyPressed:
             handleKeyPressedEvent(event);
             break;
@@ -98,6 +99,7 @@ void Application::handleMouseEvent(sf::Event event)
     {
     case sf::Event::MouseButtonPressed:
         m_isMousePressed = true;
+        m_mouseSelection = sf::Rect<int>();
         m_mouseSelection.left = event.mouseButton.x;
         m_mouseSelection.top = event.mouseButton.y;
         break;
