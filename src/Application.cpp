@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <cstdlib> // for save screen
 #include <ctime> // for save screen
+#include <map>
+#include <string>
 
 // Sfml include
 // - Graphics
@@ -69,7 +71,7 @@ void Application::update()
         m_fractaleSprite.setTexture(m_fractaleRenderer.getTexture());
 
     if(!m_doAction){
-        if(m_clock.getElapsedTime() > sf::seconds(0.1))
+        if(m_clock.getElapsedTime() > sf::seconds(0.5))
         {
             m_doAction = true;
             m_fractaleRenderer.performRendering();
@@ -141,7 +143,7 @@ void Application::handleKeyPressedEvent(sf::Event event)
     }
 
 
-    if(time - m_lastTime > sf::seconds(0.1))
+    if(time - m_lastTime > sf::seconds(0.5))
     {
         m_doAction = true;
     }
@@ -307,6 +309,9 @@ void Application::drawInfo() noexcept
     infoText.setColor(sf::Color::Blue);
     infoText.setPosition(5, 5);
 
+
+    const std::string zoomText = getZoomText(m_fractaleRenderer.getZoom());
+
     std::ostringstream oss;
     oss << "Z/ S : Zoom : x" << m_fractaleRenderer.getZoom() << "\n"
            "A / Q : Niveau de détails : " << m_fractaleRenderer.getDetailLevel() << "\n"
@@ -314,7 +319,12 @@ void Application::drawInfo() noexcept
            "E : Prendre une photo\n"
            "H : Texte visible\n"
            "R : Rafraichir ( si ça bug )\n"
-           "T : Arreter le rendu en cours";
+           "T : Arreter le rendu en cours\n";
+
+    if(!zoomText.empty()){
+        oss << "Si la fractale était de 10 cm alors ...\n"
+        "Vous regardait : " << zoomText;
+    }
 
     if(m_fractaleRenderer.getZoom() > m_fractaleRenderer.getGmpRenderBeginning()){
         oss<<"\nUsing GMP";
@@ -322,10 +332,47 @@ void Application::drawInfo() noexcept
 
     infoText.setString(oss.str());
 
-    sf::RectangleShape background(sf::Vector2f(300, 200));
+    sf::RectangleShape background(sf::Vector2f(320, 250));
     background.setFillColor(sf::Color(50, 50, 50, 150));
 
     m_window.draw(background);
     m_window.draw(infoText);
 
+}
+
+std::string Application::getZoomText(double zoom) const noexcept
+{
+    static const std::map<int, std::string> rapport =
+    {
+        {-19, "un quark"},
+        {-14, "un noyau atomique"},
+        {-13, "le vide dans l'atome"},
+        {-12, "le vide dans l'atome"},
+        {-11, "des éléctrons"},
+        {-10, "un atome"},
+        {-9,  "une molécule"},
+        {-8,  "de l'adn" },
+        {-7,  "l'intérieur du noyau d'une cellule"},
+        {-6,  "l'intérieur d'une cellule"},
+        {-5,  "une cellule"},
+        {-4,  "l'oeil d'une mouche"},
+        {-3,  "un grain de sable"},
+        {-2,  "une mouche"},
+        {-1,  "une feuille"}
+    };
+
+    unsigned exposant(0);
+    // Getting nbr of number in zoom
+    do
+    {
+        zoom /= 10;
+        ++exposant;
+    }while(zoom > 1);
+
+    std::string text;
+    auto found = rapport.find(exposant*-1);
+    if(found != rapport.end()){
+        text = found->second;
+    }
+    return text;
 }

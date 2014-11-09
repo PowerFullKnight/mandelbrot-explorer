@@ -45,6 +45,7 @@ class Application
         void handleKeyPressedEvent(sf::Event event);
 
         void drawInfo() noexcept;
+        std::string getZoomText(double zoom) const noexcept;
 
         // Key event
         void move(Direction dir);
