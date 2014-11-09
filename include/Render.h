@@ -33,17 +33,13 @@ class Render
     unsigned m_detailLevel;
     double m_scale;
 
-    std::vector< RenderThread* > m_threads;
-    sf::Mutex m_dataMutex;
+    sf::Thread m_renderThread;
     bool m_threadRun;
 
-    void performRenderingImpl(sf::Vector2u begin, sf::Vector2u end) noexcept;
-    void performRenderingImplMonothreaded() noexcept;
+    void launchRendering() noexcept;
+
     void launchAllThread();
     void terminateAllThread();
-
-    void initialize4Thread();
-    void initialize1Thread();
 
 public:
 

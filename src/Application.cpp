@@ -68,7 +68,7 @@ void Application::update()
         m_fractaleSprite.setTexture(m_fractaleRenderer.getTexture());
 
     if(!m_doAction){
-        if(m_clock.getElapsedTime() > sf::seconds(0.5))
+        if(m_clock.getElapsedTime() > sf::seconds(0.1))
         {
             m_doAction = true;
             m_fractaleRenderer.performRendering();
@@ -139,7 +139,7 @@ void Application::handleKeyPressedEvent(sf::Event event)
     }
 
 
-    if(time - m_lastTime > sf::seconds(0.5))
+    if(time - m_lastTime > sf::seconds(0.1))
     {
         m_doAction = true;
     }

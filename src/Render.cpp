@@ -18,8 +18,7 @@ Render::Render(const unsigned width, const unsigned height):
     m_gmp_normalizedPosition(),
     m_detailLevel(30),
     m_scale(1.0),
-    m_threads(),
-    m_dataMutex(),
+    m_renderThread(&Render::launchRendering, this),
     m_threadRun(false)
 {
     if(m_texture.create(m_imageSize.x, m_imageSize.y))
@@ -31,52 +30,14 @@ Render::Render(const unsigned width, const unsigned height):
         throw std::runtime_error("Texture is too big for your computer.");
     }
 
-    initialize1Thread();
 }
 
 Render::Render(const sf::Vector2u size):
     Render(size.x, size.y)
-{
-}
-
-// PRIVATE
-void Render::initialize1Thread()
-{
-    m_threads.clear();
-
-    const unsigned w = m_imageSize.x;
-    const unsigned h = m_imageSize.y;
-
-    m_threads.push_back( new RenderThread(0, sf::Vector2u(0, 0), sf::Vector2u(0, 0)));
-    m_threads[0]->setFunc(std::bind(&Render::performRenderingImplMonothreaded, this));
-}
-
-void Render::initialize4Thread()
-{
-    m_threads.clear();
-
-    const unsigned w = m_imageSize.x;
-    const unsigned h = m_imageSize.y;
-
-
-    m_threads.push_back( new RenderThread(0, sf::Vector2u(0, 0), sf::Vector2u(w / 2, h / 2)) );
-    m_threads.push_back( new RenderThread(1, sf::Vector2u(w / 2, 0), sf::Vector2u(w, h / 2)) );
-    m_threads.push_back( new RenderThread(2, sf::Vector2u(0, h / 2), sf::Vector2u(w / 2, h)) );
-    m_threads.push_back( new RenderThread(3, sf::Vector2u(w / 2, h / 2), sf::Vector2u(w, h)) );
-
-    for(std::size_t i(0); i< m_threads.size();++i){
-       m_threads.at(i)->setFunc(std::bind(&Render::performRenderingImpl, this, m_threads.at(i)->begin(), m_threads.at(i)->end()));
-    }
-
-}
-// PUBLIC
+{}
 
 Render::~Render()
-{
-    for(auto thread : m_threads){
-        delete thread;
-    }
-}
+{}
 
 void Render::setZoom(double zoom) noexcept
 {
@@ -123,8 +84,6 @@ const sf::Texture& Render::getTexture()noexcept
 
 bool Render::isRenderingFinished() const noexcept
 {
-    if(m_threads.size() > 1)
-        return true;
     return m_isRenderingFinished;
 }
 
@@ -145,38 +104,19 @@ double Render::getGmpRenderBeginning() const noexcept
 }
 
 // PRIVATE
-void Render::performRenderingImpl(sf::Vector2u begin, sf::Vector2u end) noexcept
-{
-    if(m_scale > getGmpRenderBeginning() && m_scale / 1.3 < getGmpRenderBeginning()){
-            mpf_set_d(m_gmp_normalizedPosition.x.get_mpf_t(), m_normalizedPosition.x);
-            mpf_set_d(m_gmp_normalizedPosition.y.get_mpf_t(), m_normalizedPosition.y);
-    }
-    if(m_scale > getGmpRenderBeginning()){
-        gmp_mandelbrotRenderer(m_data, m_imageSize, m_scale, m_detailLevel, m_gmp_normalizedPosition, begin, end, m_dataMutex, &m_threadRun);
-    }
-    else{
-        mandelbrotRenderer(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, begin, end, m_dataMutex, &m_threadRun);
-    }
-}
-
-void Render::performRenderingImplMonothreaded() noexcept
+void Render::launchRendering() noexcept
 {
     monoThreadedMandelbrotRenderer(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
 }
 
 void Render::launchAllThread()
 {
+    m_renderThread.launch();
     m_threadRun = true;
-    for(auto *thread : m_threads){
-        thread->run();
-    }
 }
 
 void Render::terminateAllThread()
 {
+    m_renderThread.wait();
     m_threadRun = false;
-    for(auto *thread : m_threads)
-    {
-        thread->wait();
-    }
 }
