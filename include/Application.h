@@ -58,6 +58,9 @@ class Application
         void refresh();
         void stop();
 
+        bool isControlKeyPressed() const;
+        bool doAction() const;
+
         // Rendering
         sf::RenderWindow& m_window;
         sf::Sprite m_fractaleSprite;
@@ -77,7 +80,7 @@ class Application
         // Time
         sf::Clock m_clock;
         sf::Time m_lastTime;
-        bool m_doAction;
+        bool m_actionHappened;
 };
 
 #endif // APPLICATION_H

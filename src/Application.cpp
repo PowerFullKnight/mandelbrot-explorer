@@ -28,7 +28,7 @@ Application::Application(sf::RenderWindow& window):
     m_mouseSelection(),
     m_clock(),
     m_lastTime(),
-    m_doAction(false)
+    m_actionHappened(false)
 {
     if(!m_font.loadFromFile("arial.ttf")){
         m_showText = false;
@@ -70,12 +70,9 @@ void Application::update()
     if(m_fractaleRenderer.isRenderingFinished())
         m_fractaleSprite.setTexture(m_fractaleRenderer.getTexture());
 
-    if(!m_doAction){
-        if(m_clock.getElapsedTime() > sf::seconds(0.5))
-        {
-            m_doAction = true;
-            m_fractaleRenderer.performRendering();
-        }
+    if(m_actionHappened && doAction()){
+        m_fractaleRenderer.performRendering();
+        m_actionHappened = false;
     }
 }
 
@@ -121,37 +118,8 @@ void Application::handleMouseEvent(sf::Event event)
 }
 void Application::handleKeyPressedEvent(sf::Event event)
 {
-    sf::Time time;
-    switch(event.key.code)
-    {
-        // Movement
-    case sf::Keyboard::Left:
-    case sf::Keyboard::Right:
-    case sf::Keyboard::Up:
-    case sf::Keyboard::Down:
-        // Resolution
-    case sf::Keyboard::A:
-    case sf::Keyboard::Q:
-    case sf::Keyboard::LControl:
-        // Zoom
-    case sf::Keyboard::Z:
-    case sf::Keyboard::S:
-        time = m_clock.restart();
-        break;
-    default:
-        break;
-    }
 
-
-    if(time - m_lastTime > sf::seconds(0.5))
-    {
-        m_doAction = true;
-    }
-    else{
-        m_doAction = false;
-    }
-    m_lastTime = time;
-
+    m_actionHappened = true;
     switch(event.key.code)
     {
         // Movement
@@ -201,6 +169,7 @@ void Application::handleKeyPressedEvent(sf::Event event)
         m_window.close();
         break;
     default:
+        m_actionHappened = false;
         break;
     }
 }
@@ -221,7 +190,6 @@ void Application::move(Direction dir)
     }
 
     m_fractaleRenderer.setNormalizedPosition(position);
-    m_fractaleRenderer.performRendering();
 }
 
 void Application::increaseDetail()
@@ -236,8 +204,6 @@ void Application::increaseDetail()
     else{
         m_fractaleRenderer.setDetailLevel(m_fractaleRenderer.getDetailLevel() + step);
     }
-    if(m_doAction)
-        m_fractaleRenderer.performRendering();
 }
 
 void Application::decreaseDetail()
@@ -247,28 +213,22 @@ void Application::decreaseDetail()
         step = 10;
     }
     auto detail  = m_fractaleRenderer.getDetailLevel() - step;
-    if(detail == 0){
+    if(detail == 0 || detail > m_fractaleRenderer.getDetailLevel()){ // Against under flow
         detail = 1;
     }
     m_fractaleRenderer.setDetailLevel(detail);
-    if(m_doAction)
-        m_fractaleRenderer.performRendering();
 }
 
 void Application::zoom()
 {
     double renderZoom = m_fractaleRenderer.getZoom();
     m_fractaleRenderer.setZoom(renderZoom * 1.3);
-    if(m_doAction)
-        m_fractaleRenderer.performRendering();
 }
 
 void Application::unzoom()
 {
     double renderZoom = m_fractaleRenderer.getZoom();
     m_fractaleRenderer.setZoom(renderZoom / 1.3);
-    if(m_doAction)
-        m_fractaleRenderer.performRendering();
 }
 
 void Application::takeScreen()
@@ -296,6 +256,25 @@ void Application::refresh()
 void Application::stop()
 {
     m_fractaleRenderer.abort();
+}
+
+bool Application::isControlKeyPressed() const
+{
+    sf::Keyboard::Key controlKey[9] = {
+        sf::Keyboard::Left, sf::Keyboard::Right, sf::Keyboard::Up,
+        sf::Keyboard::Down, sf::Keyboard::A, sf::Keyboard::Q,
+        sf::Keyboard::LControl, sf::Keyboard::Z, sf::Keyboard::S};
+
+    for(int i {0}; i < 9; ++i){
+        if(sf::Keyboard::isKeyPressed(controlKey[i]))
+            return true;
+    }
+    return false;
+}
+
+bool Application::doAction() const
+{
+    return !isControlKeyPressed();
 }
 
 void Application::drawInfo() noexcept
@@ -328,6 +307,11 @@ void Application::drawInfo() noexcept
 
     if(m_fractaleRenderer.getZoom() > m_fractaleRenderer.getGmpRenderBeginning()){
         oss<<"\nUsing GMP";
+    }
+    if(m_fractaleRenderer.isRenderingFinished()){
+        oss << "\nRender finished";
+    }else{
+        oss << "\nRendering ...";
     }
 
     infoText.setString(oss.str());
