@@ -3,6 +3,7 @@
 // Std include
 #include <functional>    // std::bind
 #include <stdexcept>
+#include <quadmath.h>
 
 // Personal include
 #include "RenderThread.h"
@@ -98,15 +99,30 @@ void Render::abort() noexcept
     terminateAllThread();
 }
 
-double Render::getGmpRenderBeginning() const noexcept
+long double Render::getGmpRenderBeginning() const noexcept
+{
+    return 1e25;
+}
+
+long double Render::getLongDoubleRenderBeginning() const noexcept
 {
     return 1e13;
+}
+
+double Render::getDoubleRenderBeginning() const noexcept
+{
+    return 2e4;
 }
 
 // PRIVATE
 void Render::launchRendering() noexcept
 {
-    monoThreadedMandelbrotRenderer(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
+    if(m_scale < getDoubleRenderBeginning())
+        monoThreadedMandelbrotRendererPrimitive<float>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
+    else if(m_scale < getLongDoubleRenderBeginning())
+        monoThreadedMandelbrotRendererPrimitive<double>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
+    else
+        monoThreadedMandelbrotRendererPrimitive<__float128>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
 }
 
 void Render::launchAllThread()

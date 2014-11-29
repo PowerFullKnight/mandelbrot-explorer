@@ -161,10 +161,7 @@ void Application::handleKeyPressedEvent(sf::Event event)
     case sf::Keyboard::R:
         refresh();
         break;
-    case sf::Keyboard::T:
-        stop();
-        break;
-        // Quit
+    // Quit
     case sf::Keyboard::Escape:
         m_window.close();
         break;
@@ -253,11 +250,6 @@ void Application::refresh()
     m_fractaleRenderer.performRendering();
 }
 
-void Application::stop()
-{
-    m_fractaleRenderer.abort();
-}
-
 bool Application::isControlKeyPressed() const
 {
     sf::Keyboard::Key controlKey[9] = {
@@ -284,30 +276,28 @@ void Application::drawInfo() noexcept
 
     sf::Text infoText;
     infoText.setFont(m_font);
-    infoText.setCharacterSize(20);
+    infoText.setCharacterSize(18);
     infoText.setColor(sf::Color::Blue);
     infoText.setPosition(5, 5);
 
-
-    const std::string zoomText = getZoomText(m_fractaleRenderer.getZoom());
-
+    // Info
     std::ostringstream oss;
-    oss << "Z/ S : Zoom : x" << m_fractaleRenderer.getZoom() << "\n"
-           "A / Q : Niveau de détails : " << m_fractaleRenderer.getDetailLevel() << "\n"
-           "Position : " << m_fractaleRenderer.getNormalizedPosition().x << "; " << m_fractaleRenderer.getNormalizedPosition().y << "\n"
+    oss << "Z / S : Zoom ; A / S Details\n"
            "E : Prendre une photo\n"
            "H : Texte visible\n"
-           "R : Rafraichir ( si ça bug )\n"
-           "T : Arreter le rendu en cours\n";
-
-    if(!zoomText.empty()){
-        oss << "Si la fractale était de 10 cm alors ...\n"
-        "Vous regardait : " << zoomText;
-    }
+           "R : Rafraichir ( si ça bug )";
 
     if(m_fractaleRenderer.getZoom() > m_fractaleRenderer.getGmpRenderBeginning()){
         oss<<"\nUsing GMP";
+    }else if(m_fractaleRenderer.getZoom() > m_fractaleRenderer.getLongDoubleRenderBeginning()){
+        oss<<"\nUsing Long Double";
+    }else if(m_fractaleRenderer.getZoom() > m_fractaleRenderer.getDoubleRenderBeginning()){
+        oss<<"\nUsing Double";
+    }else{
+        oss <<"\nUsing Float";
     }
+
+
     if(m_fractaleRenderer.isRenderingFinished()){
         oss << "\nRender finished";
     }else{
@@ -316,11 +306,33 @@ void Application::drawInfo() noexcept
 
     infoText.setString(oss.str());
 
-    sf::RectangleShape background(sf::Vector2f(320, 250));
+    sf::RectangleShape background(sf::Vector2f(infoText.getGlobalBounds().width+10, infoText.getGlobalBounds().height+15));
     background.setFillColor(sf::Color(50, 50, 50, 150));
 
     m_window.draw(background);
     m_window.draw(infoText);
+
+    // Zoom info
+    oss.str("");
+
+    const std::string zoomText = getZoomText(m_fractaleRenderer.getZoom());
+    oss << "\nZoom : " << m_fractaleRenderer.getZoom() <<
+           "\nDétails : " << m_fractaleRenderer.getDetailLevel() <<
+           "\nPosition : " << m_fractaleRenderer.getNormalizedPosition().x << "; " << m_fractaleRenderer.getNormalizedPosition().y;
+    if(!zoomText.empty()){
+        oss << "\nVous regardait " << zoomText;
+    }
+    infoText.setString(oss.str());
+    infoText.setPosition(m_window.getSize().x - infoText.getGlobalBounds().width,
+                         m_window.getSize().y - infoText.getGlobalBounds().height-30);
+    sf::RectangleShape backgroundZoomInfo(sf::Vector2f(infoText.getGlobalBounds().width+2, infoText.getGlobalBounds().height+10));
+    backgroundZoomInfo.setPosition(m_window.getSize().x - infoText.getGlobalBounds().width - 2,
+                                   m_window.getSize().y - infoText.getGlobalBounds().height - 12);
+    backgroundZoomInfo.setFillColor(sf::Color(50, 50, 50, 150));
+
+    m_window.draw(backgroundZoomInfo);
+    m_window.draw(infoText);
+
 
 }
 

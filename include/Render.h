@@ -61,7 +61,9 @@ public:
 
     const sf::Texture& getTexture() noexcept;
 
-    double getGmpRenderBeginning() const noexcept;
+    long double getGmpRenderBeginning() const noexcept;
+    long double getLongDoubleRenderBeginning() const noexcept;
+    double getDoubleRenderBeginning() const noexcept;
 
     bool isRenderingFinished() const noexcept;
 

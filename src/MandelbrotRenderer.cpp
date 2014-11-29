@@ -10,9 +10,9 @@ void monoThreadedMandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vect
 
     const unsigned &resolution = detailLevel;
 
-    const static double fractal_left = -2.1;
-    const static double fractal_bottom = -1.2;
-    const static double fractal_top = 1.2;
+    constexpr static double fractal_left = -2.1;
+    constexpr static double fractal_bottom = -1.2;
+    constexpr static double fractal_top = 1.2;
 
     const double zoom_y = zoom * dataSize.y / (fractal_top - fractal_bottom);
     const double zoom_x = zoom_y;
@@ -80,96 +80,6 @@ void monoThreadedMandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vect
         }
     }
     finished = true;
-}
-
-void mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
-                        const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition,
-                        sf::Vector2u begin, sf::Vector2u end, sf::Mutex& dataMutex, bool* isRunning)
-{
-    const unsigned &resolution = detailLevel;
-
-    const static double fractal_left = -2.1;
-//    const static double fractal_right = 0.6; -> unused
-    const static double fractal_bottom = -1.2;
-    const static double fractal_top = 1.2;
-
-    double zoom_y = zoom * dataSize.y / (fractal_top - fractal_bottom);
-    double zoom_x = zoom_y;
-
-    const sf::Uint64 fractal_width  = static_cast<sf::Uint64>(dataSize.x * zoom);
-    const sf::Uint64 fractal_height = static_cast<sf::Uint64>(dataSize.y * zoom);
-
-    std::vector<sf::Uint8> buff((end.x - begin.x) * (end.y - begin.y) * 4, 0);
-
-    for(unsigned x(begin.x); x < end.x && *isRunning; ++x)
-    {
-        for(unsigned y(begin.y); y < end.y && *isRunning; ++y)
-        {
-            const sf::Uint64 fractal_x = static_cast<sf::Uint64>(
-                                        static_cast<double>(fractal_width) * normalizedPosition.x - dataSize.x / 2 + x );
-            const sf::Uint64 fractal_y = static_cast<sf::Uint64>(
-                                        static_cast<double>(fractal_height) * normalizedPosition.y - dataSize.y / 2 + y);
-
-            double c_r = static_cast<double>(fractal_x) / static_cast<double>(zoom_x) + fractal_left;
-            double c_i = static_cast<double>(fractal_y) / static_cast<double>(zoom_y) + fractal_bottom;
-            double z_r = 0;
-            double z_i = 0;
-
-            unsigned i = 0;
-            do
-            {
-                double tmp = z_r;
-                z_r = z_r * z_r - z_i * z_i + c_r;
-                z_i = 2 * tmp * z_i + c_i;
-                i++;
-            }
-            while (z_r * z_r + z_i * z_i < 4 && i < resolution);
-
-            const unsigned offset = ((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4;
-            if (i == resolution)
-            {
-                buff[offset + 0] = static_cast<sf::Uint8>(0);
-                buff[offset + 1] = static_cast<sf::Uint8>(0);
-                buff[offset + 2] = static_cast<sf::Uint8>(0);
-                buff[offset + 3] = static_cast<sf::Uint8>(255);
-            }
-            else
-            {
-                double t = static_cast<double>(i)/static_cast<double>(resolution);
-
-                // Use smooth polynomials for r, g, b
-                sf::Uint8 r = static_cast<sf::Uint8>(9*(1-t)*t*t*t*255);
-                sf::Uint8 g = static_cast<sf::Uint8>(15*(1-t)*(1-t)*t*t*255);
-                sf::Uint8 b = static_cast<sf::Uint8>(8.5*(1-t)*(1-t)*(1-t)*t*255);
-
-                buff[offset + 0] = r;
-                buff[offset + 1] = g;
-                buff[offset + 2] = b;
-                buff[offset + 3] = static_cast<sf::Uint8>(255);
-            }
-        }
-    }
-
-    if(!(*isRunning)){
-        return;
-    }
-
-    dataMutex.lock();
-
-    for(unsigned x(begin.x); x < end.x; ++x)
-    {
-        for(unsigned y(begin.y); y < end.y; ++y)
-        {
-            data[(y * dataSize.x + x) * 4 + 0] = buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 0];
-            data[(y * dataSize.x + x) * 4 + 1] = buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 1];
-            data[(y * dataSize.x + x) * 4 + 2] = buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 2];
-            data[(y * dataSize.x + x) * 4 + 3] = buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 3];
-        }
-    }
-
-
-    dataMutex.unlock();
-
 }
 
 void gmp_mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
