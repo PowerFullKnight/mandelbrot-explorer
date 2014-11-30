@@ -57,7 +57,7 @@ class Application
         void togglePanel();
         void toggleAutoAdjust();
         void refresh();
-        void stop();
+        void video();
 
         bool isControlKeyPressed() const;
         bool doAction() const;

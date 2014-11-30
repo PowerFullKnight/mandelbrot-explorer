@@ -88,10 +88,10 @@ void mandelbrotRendererPrimitive(std::vector<sf::Uint8> &data, const sf::Vector2
             //http://en.wikibooks.org/wiki/Fractals/Iterations_in_the_complex_plane/Mandelbrot_set#Cardioid_and_period-2_checking
             // Check if the point is in the main cardioid
             // The point is in main cardioid if :
-            // q = (x-1/4)²+y²
-            // q(q+(x-1/4)) < 1/4 * y²
+            // q = (x-1/4)^2+y^2
+            // q(q+(x-1/4)) < 1/4 * y^2
             // And in period 2 if
-            // (x+1)² + y² < 1/16
+            // (x+1)^2 + y^2 < 1/16
             auto x_ = static_cast<T>(fractal_x) / static_cast<T>(zoom_x) + fractal_left;
             auto y_ = static_cast<T>(fractal_y) / static_cast<T>(zoom_y) + fractal_bottom;
             auto q_ = (x_ - 0.25) * (x_ - 0.25) + y_*y_;

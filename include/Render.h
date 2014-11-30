@@ -72,6 +72,7 @@ public:
     bool isRenderingFinished() const noexcept;
 
     void performRendering() noexcept;
+    void performRenderingSync() noexcept; // Blockant version
     void abort() noexcept;
 };
 

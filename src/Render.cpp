@@ -46,7 +46,7 @@ void Render::setZoom(double zoom) noexcept
 {
     m_scale = zoom;
     if(m_autoAdjustDetail){
-        m_detailLevel = sqrt(abs(2*sqrt(abs(1-sqrt(5*m_scale)))))*30;
+        m_detailLevel = sqrt(abs(2*sqrt(abs(1-sqrt(5*m_scale)))))*66.5;
     }if(m_detailLevel == 0){
         m_detailLevel = 30;
     }
@@ -109,6 +109,11 @@ void Render::performRendering() noexcept
 {
     terminateAllThread();
     launchAllThread();
+}
+
+void Render::performRenderingSync() noexcept
+{
+    launchRendering();
 }
 
 void Render::abort() noexcept

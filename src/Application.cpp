@@ -170,6 +170,9 @@ void Application::handleKeyPressedEvent(sf::Event event)
     case sf::Keyboard::R:
         refresh();
         break;
+    case sf::Keyboard::V:
+        video();
+        break;
     // Quit
     case sf::Keyboard::Escape:
         m_window.close();
@@ -262,6 +265,23 @@ void Application::toggleAutoAdjust()
 void Application::refresh()
 {
     m_fractaleRenderer.performRendering();
+}
+
+void Application::video()
+{
+    m_window.close();
+    auto date = time(nullptr);
+    auto fractZoom = m_fractaleRenderer.getZoom();
+    for(decltype(fractZoom) i { 0 }; i < fractZoom; i += fractZoom / 100)
+    {
+        m_fractaleRenderer.setZoom(i);
+        m_fractaleRenderer.performRenderingSync();
+
+        sf::Image screen = m_fractaleRenderer.getTexture().copyToImage();
+        std::ostringstream fileName;
+        fileName << "video-" << date << "-" << fractZoom / i  * 100<< ".png";
+        screen.saveToFile(fileName.str());
+    }
 }
 
 bool Application::isControlKeyPressed() const
