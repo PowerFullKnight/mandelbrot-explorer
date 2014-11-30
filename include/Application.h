@@ -55,6 +55,7 @@ class Application
         void unzoom();
         void takeScreen();
         void togglePanel();
+        void toggleAutoAdjust();
         void refresh();
         void stop();
 
@@ -81,6 +82,7 @@ class Application
         sf::Clock m_clock;
         sf::Time m_lastTime;
         bool m_actionHappened;
+        bool m_changeTexture;
 };
 
 #endif // APPLICATION_H

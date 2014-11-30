@@ -28,7 +28,8 @@ Application::Application(sf::RenderWindow& window):
     m_mouseSelection(),
     m_clock(),
     m_lastTime(),
-    m_actionHappened(false)
+    m_actionHappened(false),
+    m_changeTexture(true)
 {
     if(!m_font.loadFromFile("arial.ttf")){
         m_showText = false;
@@ -67,12 +68,16 @@ void Application::handleEvent()
 
 void Application::update()
 {
-    if(m_fractaleRenderer.isRenderingFinished())
+    if(m_fractaleRenderer.isRenderingFinished() && m_changeTexture){
         m_fractaleSprite.setTexture(m_fractaleRenderer.getTexture());
+        m_changeTexture = false;
+    }
+
 
     if(m_actionHappened && doAction()){
         m_fractaleRenderer.performRendering();
         m_actionHappened = false;
+        m_changeTexture = true;
     }
 }
 
@@ -84,8 +89,8 @@ void Application::draw()
         sf::RectangleShape rect(sf::Vector2f(m_mouseSelection.width, m_mouseSelection.height));
         rect.setPosition(m_mouseSelection.left, m_mouseSelection.top);
         rect.setFillColor(sf::Color::Transparent);
-        rect.setOutlineColor(sf::Color(100,100,100));
-        rect.setOutlineThickness(2);
+        rect.setOutlineColor(sf::Color(200,255,200));
+        rect.setOutlineThickness(1);
         m_window.draw(rect);
     }
     drawInfo();
@@ -141,6 +146,10 @@ void Application::handleKeyPressedEvent(sf::Event event)
         break;
     case sf::Keyboard::Q:
         decreaseDetail();
+        break;
+        // Auto adjust resolution
+    case sf::Keyboard::D:
+        toggleAutoAdjust();
         break;
         // Zoom
     case sf::Keyboard::Z:
@@ -245,6 +254,11 @@ void Application::togglePanel()
     m_showText = !m_showText;
 }
 
+void Application::toggleAutoAdjust()
+{
+    m_fractaleRenderer.setAutoAdjustDetail(!m_fractaleRenderer.autoAdjustDetail());
+}
+
 void Application::refresh()
 {
     m_fractaleRenderer.performRendering();
@@ -282,7 +296,7 @@ void Application::drawInfo() noexcept
 
     // Info
     std::ostringstream oss;
-    oss << "Z / S : Zoom ; A / S Details\n"
+    oss << "Z / S : Zoom ; A / Q Details; D Ajustement auto\n"
            "E : Prendre une photo\n"
            "H : Texte visible\n"
            "R : Rafraichir ( si ça bug )";
@@ -317,8 +331,11 @@ void Application::drawInfo() noexcept
 
     const std::string zoomText = getZoomText(m_fractaleRenderer.getZoom());
     oss << "\nZoom : " << m_fractaleRenderer.getZoom() <<
-           "\nDétails : " << m_fractaleRenderer.getDetailLevel() <<
-           "\nPosition : " << m_fractaleRenderer.getNormalizedPosition().x << "; " << m_fractaleRenderer.getNormalizedPosition().y;
+           "\nDétails : " << m_fractaleRenderer.getDetailLevel();
+    if(m_fractaleRenderer.autoAdjustDetail()){
+        oss << " Auto";
+    }
+    oss << "\nPosition : " << m_fractaleRenderer.getNormalizedPosition().x << "; " << m_fractaleRenderer.getNormalizedPosition().y;
     if(!zoomText.empty()){
         oss << "\nVous regardait " << zoomText;
     }

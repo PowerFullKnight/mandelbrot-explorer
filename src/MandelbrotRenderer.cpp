@@ -3,12 +3,10 @@
 #include "omp.h"
 
 
-void monoThreadedMandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
+void mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
                         const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition, bool& isRunning, bool &finished)
 {
     finished = false;
-
-    const unsigned &resolution = detailLevel;
 
     constexpr static double fractal_left = -2.1;
     constexpr static double fractal_bottom = -1.2;
@@ -53,10 +51,10 @@ void monoThreadedMandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vect
 
                 i++;
             }
-            while (zi2 + zr2 < 4 && i < resolution);
+            while (zi2 + zr2 < 4 && i < detailLevel);
 
             unsigned offset = (y * dataSize.x + x) * 4;
-            if (i == resolution)
+            if (i == detailLevel)
             {
                 data[offset++] = static_cast<sf::Uint8>(0);
                 data[offset++] = static_cast<sf::Uint8>(0);
@@ -65,7 +63,7 @@ void monoThreadedMandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vect
             }
             else
             {
-                const double t = static_cast<double>(i)/static_cast<double>(resolution);
+                const double t = static_cast<double>(i)/static_cast<double>(detailLevel);
 
                 // Use smooth polynomials for r, g, b
                 sf::Uint8 r = static_cast<sf::Uint8>(9*(1-t)*t*t*t*255);
@@ -83,9 +81,9 @@ void monoThreadedMandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vect
 }
 
 void gmp_mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
-                        const unsigned detailLevel, const sf::Vector2<mpf_class>& normalizedPosition,
-                        sf::Vector2u begin, sf::Vector2u end, sf::Mutex& dataMutex, bool* isRunning)
+                        const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition, bool& isRunning, bool &finished)
 {
+    finished = false;
     constexpr unsigned pre = 1024; // The precision
     const unsigned &resolution = detailLevel;
 
@@ -100,11 +98,10 @@ void gmp_mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& da
     const mpz_class fractal_width  (dataSize.x * zoom);
     const mpz_class fractal_height (dataSize.y * zoom);
 
-    std::vector<sf::Uint8> buff((end.x - begin.x) * (end.y - begin.y) * 4, 0);
-
-    for(unsigned x(begin.x); x < end.x && *isRunning; ++x)
+    #pragma omp parallel for num_threads(8) schedule(dynamic,32)
+    for(unsigned x = 0; x < dataSize.x; ++x)
     {
-        for(unsigned y(begin.y); y < end.y && *isRunning; ++y)
+        for(unsigned y = 0; y < dataSize.y; ++y)
         {
             mpz_class fractal_x = 0;
             const mpf_class tempFractalX { fractal_width  * normalizedPosition.x - dataSize.x / 2 + x, pre };
@@ -127,18 +124,19 @@ void gmp_mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& da
                 z_i = 2 * tmp * z_i + c_i;
                 i++;
             }
-            while (z_r * z_r + z_i * z_i < 4 && i < resolution);
+            while (z_r * z_r + z_i * z_i < 4 && i < detailLevel);
 
-            if (i == resolution)
+            unsigned offset = (y * dataSize.x + x) * 4;
+            if (i == detailLevel)
             {
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 0] = static_cast<sf::Uint8>(0);
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x))* 4 + 1] = static_cast<sf::Uint8>(0);
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 2] = static_cast<sf::Uint8>(0);
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 3] = static_cast<sf::Uint8>(255);
+                data[offset++] = static_cast<sf::Uint8>(0);
+                data[offset++] = static_cast<sf::Uint8>(0);
+                data[offset++] = static_cast<sf::Uint8>(0);
+                data[offset++] = static_cast<sf::Uint8>(255);
             }
             else
             {
-                mpf_class t { mpf_class(i, pre)/mpf_class(resolution, pre) };
+                const mpf_class t { mpf_class(i, pre)/mpf_class(detailLevel, pre) };
 
                 // Use smooth polynomials for r, g, b
                 mpz_class r = 0;
@@ -153,32 +151,13 @@ void gmp_mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& da
                 const mpf_class tempB { 8.5*(1-t)*(1-t)*(1-t)*t*255, pre };
                 mpz_set_f(b.get_mpz_t(), tempB.get_mpf_t());
 
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 0] = r.get_ui();
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 1] = g.get_ui();
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 2] = b.get_ui();
-                buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 3] = static_cast<sf::Uint8>(255);
+                data[offset++] = r.get_ui();
+                data[offset++] = g.get_ui();
+                data[offset++] = b.get_ui();
+                data[offset++] = static_cast<sf::Uint8>(255);
             }
         }
     }
 
-    // Done also if isRunning = false
-
-    if(!(*isRunning)){
-        return;
-    }
-
-    dataMutex.lock();
-
-    for(unsigned x(begin.x); x < end.x; ++x)
-    {
-        for(unsigned y(begin.y); y < end.y; ++y)
-        {
-            data[(y * dataSize.x + x) * 4 + 0] = buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 0];
-            data[(y * dataSize.x + x) * 4 + 1] = buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 1];
-            data[(y * dataSize.x + x) * 4 + 2] = buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 2];
-            data[(y * dataSize.x + x) * 4 + 3] = buff[((y-begin.y) * (end.x - begin.x) + (x-begin.x)) * 4 + 3];
-        }
-    }
-
-    dataMutex.unlock();
+    finished = true;
 }

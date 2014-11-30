@@ -4,6 +4,7 @@
 #include <functional>    // std::bind
 #include <stdexcept>
 #include <quadmath.h>
+#include <cmath>
 
 // Personal include
 #include "RenderThread.h"
@@ -18,6 +19,7 @@ Render::Render(const unsigned width, const unsigned height):
     m_normalizedPosition(0.4, 0.5),
     m_gmp_normalizedPosition(),
     m_detailLevel(30),
+    m_autoAdjustDetail(true),
     m_scale(1.0),
     m_renderThread(&Render::launchRendering, this),
     m_threadRun(false)
@@ -43,6 +45,11 @@ Render::~Render()
 void Render::setZoom(double zoom) noexcept
 {
     m_scale = zoom;
+    if(m_autoAdjustDetail){
+        m_detailLevel = sqrt(abs(2*sqrt(abs(1-sqrt(5*m_scale)))))*30;
+    }if(m_detailLevel == 0){
+        m_detailLevel = 30;
+    }
 }
 
 double Render::getZoom() const noexcept
@@ -58,6 +65,16 @@ void Render::setDetailLevel(unsigned detailLevel) noexcept
 unsigned Render::getDetailLevel() const noexcept
 {
     return m_detailLevel;
+}
+
+void Render::setAutoAdjustDetail(bool autoAdj) noexcept
+{
+     m_autoAdjustDetail = autoAdj;
+}
+
+bool Render::autoAdjustDetail() const noexcept
+{
+    return m_autoAdjustDetail;
 }
 
 void Render::setNormalizedPosition(sf::Vector2<double> position) noexcept
@@ -118,11 +135,11 @@ double Render::getDoubleRenderBeginning() const noexcept
 void Render::launchRendering() noexcept
 {
     if(m_scale < getDoubleRenderBeginning())
-        monoThreadedMandelbrotRendererPrimitive<float>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
+        mandelbrotRendererPrimitive<float>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
     else if(m_scale < getLongDoubleRenderBeginning())
-        monoThreadedMandelbrotRendererPrimitive<double>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
+        mandelbrotRendererPrimitive<double>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
     else
-        monoThreadedMandelbrotRendererPrimitive<__float128>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
+        mandelbrotRendererPrimitive<__float128>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
 }
 
 void Render::launchAllThread()

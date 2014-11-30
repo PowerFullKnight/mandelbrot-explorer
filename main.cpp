@@ -9,6 +9,7 @@
 int main()
 {
     sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "Fractale", sf::Style::Fullscreen);
+    //sf::RenderWindow window(sf::VideoMode(160*2, 90*2), "Fractale");
 
     Application app(window);
 

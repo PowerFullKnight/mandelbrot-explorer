@@ -31,6 +31,7 @@ class Render
     sf::Vector2<double> m_normalizedPosition;
     sf::Vector2<mpf_class> m_gmp_normalizedPosition;
     unsigned m_detailLevel;
+    bool m_autoAdjustDetail;
     double m_scale;
 
     sf::Thread m_renderThread;
@@ -55,6 +56,9 @@ public:
 
     void setDetailLevel(unsigned detailLevel) noexcept;
     unsigned getDetailLevel() const noexcept;
+
+    void setAutoAdjustDetail(bool autoAdj) noexcept;
+    bool autoAdjustDetail()  const noexcept;
 
     void setNormalizedPosition(sf::Vector2<double> position) noexcept;
     sf::Vector2<double> getNormalizedPosition() const noexcept;
