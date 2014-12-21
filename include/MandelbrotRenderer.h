@@ -3,6 +3,7 @@
 
 // Std include
 #include <vector>
+#include <cmath>
 
 // Sfml include
 // - System
@@ -19,7 +20,6 @@ void mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSi
 void gmp_mandelbrotRenderer(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
                             const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition, bool& isRunning, bool &finished);
 
-
 template<typename T>
 unsigned getEscapeIterationFor(sf::Uint64 fractal_x, sf::Uint64 fractal_y, T zoom_x, T zoom_y,
                                const unsigned detailLevel)
@@ -30,6 +30,26 @@ unsigned getEscapeIterationFor(sf::Uint64 fractal_x, sf::Uint64 fractal_y, T zoo
 
     T c_r = static_cast<T>(fractal_x) / static_cast<T>(zoom_x) + fractal_left;
     T c_i = static_cast<T>(fractal_y) / static_cast<T>(zoom_y) + fractal_bottom;
+
+    // Optimization accorded to
+    //http://en.wikibooks.org/wiki/Fractals/Iterations_in_the_complex_plane/Mandelbrot_set#Cardioid_and_period-2_checking
+    // Check if the point is in the main cardioid
+    // The point is in main cardioid if :
+    // q = (x-1/4)^2+y^2
+    // q(q+(x-1/4)) < 1/4 * y^2
+    // And in period 2 if
+    // (x+1)^2 + y^2 < 1/16
+
+    const auto q_ = (c_r - 0.25) * (c_r - 0.25) + c_i*c_i;
+
+    if((q_ * (q_ + (c_r - 0.25 )) < 0.25*c_i*c_i) //q(q+(x-1/4)) < 1/4 * y^2
+        || ( (c_r+1) * (c_r +1) + c_i*c_i < 1/16)  // (x+1)^2 + y^2 < 1/16
+       )
+   {
+       return detailLevel;
+   }
+
+
     T z_r = 0;
     T z_i = 0;
 
@@ -73,7 +93,7 @@ void mandelbrotRendererPrimitive(std::vector<sf::Uint8> &data, const sf::Vector2
     const sf::Uint64 baseFractal_y = static_cast<sf::Uint64>(
                                          static_cast<T>(fractal_height) * normalizedPosition.y - dataSize.y / 2);
 
-    #pragma omp parallel for num_threads(8) schedule(dynamic,32)
+    #pragma omp parallel for num_threads(8)
     for(unsigned x = 0; x < dataSize.x; ++x)
     {
         const sf::Uint64 fractal_x = baseFractal_x + x;
@@ -84,22 +104,7 @@ void mandelbrotRendererPrimitive(std::vector<sf::Uint8> &data, const sf::Vector2
 
             unsigned i = 0;
 
-            // Optimization accorded to
-            //http://en.wikibooks.org/wiki/Fractals/Iterations_in_the_complex_plane/Mandelbrot_set#Cardioid_and_period-2_checking
-            // Check if the point is in the main cardioid
-            // The point is in main cardioid if :
-            // q = (x-1/4)^2+y^2
-            // q(q+(x-1/4)) < 1/4 * y^2
-            // And in period 2 if
-            // (x+1)^2 + y^2 < 1/16
-            auto x_ = static_cast<T>(fractal_x) / static_cast<T>(zoom_x) + fractal_left;
-            auto y_ = static_cast<T>(fractal_y) / static_cast<T>(zoom_y) + fractal_bottom;
-            auto q_ = (x_ - 0.25) * (x_ - 0.25) + y_*y_;
-            auto r1_ = q_ * (q_ + (x_ - 0.25 ));
-            auto r2_ = (x_+1) * (x_ +1) + y_*y_;
-
-            if(!(r1_ < 0.25*y_*y_) && !( r2_ < 1/16))
-                i = getEscapeIterationFor(fractal_x, fractal_y, zoom_x, zoom_y, detailLevel);
+            i = getEscapeIterationFor(fractal_x, fractal_y, zoom_x, zoom_y, detailLevel);
 
             unsigned offset = (y * dataSize.x + x) * 4;
             if (i == detailLevel)

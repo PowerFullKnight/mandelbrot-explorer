@@ -3,10 +3,12 @@
 // Std include
 #include <sstream>
 #include <stdexcept>
-#include <cstdlib> // for save screen
-#include <ctime> // for save screen
+#include <cstdlib> // to save screen
+#include <ctime> // to save screen
 #include <map>
+#include <cmath>
 #include <string>
+#include <iostream>
 
 // Sfml include
 // - Graphics
@@ -150,6 +152,7 @@ void Application::handleKeyPressedEvent(sf::Event event)
         // Auto adjust resolution
     case sf::Keyboard::D:
         toggleAutoAdjust();
+        m_actionHappened = false; // No need to recalculate
         break;
         // Zoom
     case sf::Keyboard::Z:
@@ -161,21 +164,26 @@ void Application::handleKeyPressedEvent(sf::Event event)
         // Screen
     case sf::Keyboard::E:
         takeScreen();
+        m_actionHappened = false; // No need to recalculate
         break;
         // Panel
     case sf::Keyboard::H:
         togglePanel();
+        m_actionHappened = false; // No need to recalculate
         break;
         // Refresh & stop
     case sf::Keyboard::R:
         refresh();
+        m_actionHappened = false; // No need to recalculate ( refresh below )
         break;
     case sf::Keyboard::V:
         video();
+        m_actionHappened = false; // No need to recalculate
         break;
     // Quit
     case sf::Keyboard::Escape:
         m_window.close();
+        m_actionHappened = false; // No need to recalculate
         break;
     default:
         m_actionHappened = false;
@@ -207,12 +215,7 @@ void Application::increaseDetail()
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::RControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)){
         step = 10;
     }
-    if(step > m_fractaleRenderer.getDetailLevel()){
-        m_fractaleRenderer.setDetailLevel(1);
-    }
-    else{
-        m_fractaleRenderer.setDetailLevel(m_fractaleRenderer.getDetailLevel() + step);
-    }
+    m_fractaleRenderer.setDetailLevel(m_fractaleRenderer.getDetailLevel() + step);
 }
 
 void Application::decreaseDetail()
@@ -272,15 +275,21 @@ void Application::video()
     m_window.close();
     auto date = time(nullptr);
     auto fractZoom = m_fractaleRenderer.getZoom();
-    for(decltype(fractZoom) i { 0 }; i < fractZoom; i += fractZoom / 100)
+    const auto factor = 1.05;
+    const auto maxImg = floor(exp(log(fractZoom) / factor)); // log = logarithm neperien
+
+    unsigned j {0};
+    for(decltype(fractZoom) i { 1 }; i < fractZoom; i *= factor)
     {
         m_fractaleRenderer.setZoom(i);
         m_fractaleRenderer.performRenderingSync();
+        std::cout << j << " / " << maxImg << '\n';
 
         sf::Image screen = m_fractaleRenderer.getTexture().copyToImage();
         std::ostringstream fileName;
-        fileName << "video-" << date << "-" << fractZoom / i  * 100<< ".png";
+        fileName << "video/video-" << date << "-" << j << ".png";
         screen.saveToFile(fileName.str());
+        ++j;
     }
 }
 
@@ -357,7 +366,7 @@ void Application::drawInfo() noexcept
     }
     oss << "\nPosition : " << m_fractaleRenderer.getNormalizedPosition().x << "; " << m_fractaleRenderer.getNormalizedPosition().y;
     if(!zoomText.empty()){
-        oss << "\nVous regardait " << zoomText;
+        oss << "\nVous regardez " << zoomText;
     }
     infoText.setString(oss.str());
     infoText.setPosition(m_window.getSize().x - infoText.getGlobalBounds().width,

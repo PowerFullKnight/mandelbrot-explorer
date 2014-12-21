@@ -30,9 +30,9 @@ class Render
 
     sf::Vector2<double> m_normalizedPosition;
     sf::Vector2<mpf_class> m_gmp_normalizedPosition;
+    double m_scale;
     unsigned m_detailLevel;
     bool m_autoAdjustDetail;
-    double m_scale;
 
     sf::Thread m_renderThread;
     bool m_threadRun;
@@ -41,6 +41,8 @@ class Render
 
     void launchAllThread();
     void terminateAllThread();
+
+    unsigned getDetailForZoom(double zoom) const;
 
 public:
 

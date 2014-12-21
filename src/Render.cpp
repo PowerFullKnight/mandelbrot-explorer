@@ -18,12 +18,13 @@ Render::Render(const unsigned width, const unsigned height):
     m_isRenderingFinished(true),
     m_normalizedPosition(0.4, 0.5),
     m_gmp_normalizedPosition(),
+    m_scale(1.0),
     m_detailLevel(30),
     m_autoAdjustDetail(true),
-    m_scale(1.0),
     m_renderThread(&Render::launchRendering, this),
     m_threadRun(false)
 {
+    m_detailLevel = getDetailForZoom(m_scale);
     if(m_texture.create(m_imageSize.x, m_imageSize.y))
     {
         m_texture.setSmooth(false);
@@ -45,11 +46,8 @@ Render::~Render()
 void Render::setZoom(double zoom) noexcept
 {
     m_scale = zoom;
-    if(m_autoAdjustDetail){
-        m_detailLevel = sqrt(abs(2*sqrt(abs(1-sqrt(5*m_scale)))))*66.5;
-    }if(m_detailLevel == 0){
-        m_detailLevel = 30;
-    }
+    if(m_autoAdjustDetail)
+        m_detailLevel = getDetailForZoom(zoom);
 }
 
 double Render::getZoom() const noexcept
@@ -149,12 +147,18 @@ void Render::launchRendering() noexcept
 
 void Render::launchAllThread()
 {
-    m_renderThread.launch();
     m_threadRun = true;
+    m_renderThread.launch();
 }
 
 void Render::terminateAllThread()
 {
+   // m_threadRun = false; Test; may stop crashing
     m_renderThread.wait();
-    m_threadRun = false;
+}
+
+unsigned Render::getDetailForZoom(double zoom) const
+{
+    unsigned details = sqrt(abs(2*sqrt(abs(1-sqrt(5*m_scale)))))*66.5;
+    return (details == 0 ? 30 : details);
 }
