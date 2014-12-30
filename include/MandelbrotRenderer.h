@@ -94,13 +94,13 @@ void mandelbrotRendererPrimitive(std::vector<sf::Uint8> &data, const sf::Vector2
                                          static_cast<T>(fractal_height) * normalizedPosition.y - dataSize.y / 2);
 
     #pragma omp parallel for num_threads(8)
-    for(unsigned x = 0; x < dataSize.x; ++x)
+    for(unsigned y = 0; y < dataSize.y; ++y)
     {
-        const sf::Uint64 fractal_x = baseFractal_x + x;
+        const sf::Uint64 fractal_y = baseFractal_y + y;
 
-        for(unsigned y = 0; y < dataSize.y && isRunning; ++y)
+        for(unsigned x = 0; x < dataSize.x  && isRunning; ++x)
         {
-            const sf::Uint64 fractal_y = baseFractal_y + y;
+            const sf::Uint64 fractal_x = baseFractal_x + x;
 
             unsigned i = 0;
 
