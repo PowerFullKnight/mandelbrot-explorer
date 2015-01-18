@@ -73,10 +73,12 @@ unsigned getEscapeIterationFor(sf::Uint64 fractal_x, sf::Uint64 fractal_y, T zoo
 }
 
 template <typename T>
-void mandelbrotRendererPrimitive(std::vector<sf::Uint8> &data, const sf::Vector2u& dataSize, const double zoom,
-                                 const unsigned detailLevel, const sf::Vector2<double>& normalizedPosition, bool& isRunning, bool &finished)
+void mandelbrotRendererPrimitive(std::vector<sf::Uint8> &data, const sf::Vector2u dataSize, const double zoom,
+                                 const unsigned detailLevel, const sf::Vector2<double> normalizedPosition, bool& isRunning, bool &finished, sf::Mutex &mut)
 {
+    mut.lock();
     finished = false;
+    mut.unlock();
 
     constexpr static T fractal_left = -2.1;
     constexpr static T fractal_bottom = -1.2;
@@ -93,12 +95,20 @@ void mandelbrotRendererPrimitive(std::vector<sf::Uint8> &data, const sf::Vector2
     const sf::Uint64 baseFractal_y = static_cast<sf::Uint64>(
                                          static_cast<T>(fractal_height) * normalizedPosition.y - dataSize.y / 2);
 
+    bool run = true;
+
     #pragma omp parallel for num_threads(8)
     for(unsigned y = 0; y < dataSize.y; ++y)
     {
         const sf::Uint64 fractal_y = baseFractal_y + y;
 
-        for(unsigned x = 0; x < dataSize.x  && isRunning; ++x)
+        mut.lock();
+        if(!isRunning){
+            run = false;
+        }
+        mut.unlock();
+
+        for(unsigned x = 0; x < dataSize.x && run; ++x)
         {
             const sf::Uint64 fractal_x = baseFractal_x + x;
 
@@ -130,7 +140,10 @@ void mandelbrotRendererPrimitive(std::vector<sf::Uint8> &data, const sf::Vector2
             }
         }
     }
+
+    mut.lock();
     finished = true;
+    mut.unlock();
 }
 
 #endif // MANDELBROTRENDERER_H

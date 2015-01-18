@@ -37,6 +37,8 @@ class Render
     sf::Thread m_renderThread;
     bool m_threadRun;
 
+    sf::Mutex m_mutexForBoolean;
+
     void launchRendering() noexcept;
 
     void launchAllThread();
@@ -68,8 +70,8 @@ public:
     const sf::Texture& getTexture() noexcept;
 
     long double getGmpRenderBeginning() const noexcept;
-    long double getLongDoubleRenderBeginning() const noexcept;
-    double getDoubleRenderBeginning() const noexcept;
+    double getLongDoubleRenderBeginning() const noexcept;
+    float getDoubleRenderBeginning() const noexcept;
 
     bool isRenderingFinished() const noexcept;
 

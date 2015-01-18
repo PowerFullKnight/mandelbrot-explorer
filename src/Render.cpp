@@ -22,7 +22,8 @@ Render::Render(const unsigned width, const unsigned height):
     m_detailLevel(30),
     m_autoAdjustDetail(true),
     m_renderThread(&Render::launchRendering, this),
-    m_threadRun(false)
+    m_threadRun(false),
+    m_mutexForBoolean()
 {
     m_detailLevel = getDetailForZoom(m_scale);
     if(m_texture.create(m_imageSize.x, m_imageSize.y))
@@ -124,12 +125,12 @@ long double Render::getGmpRenderBeginning() const noexcept
     return 1e25;
 }
 
-long double Render::getLongDoubleRenderBeginning() const noexcept
+double Render::getLongDoubleRenderBeginning() const noexcept
 {
     return 1e13;
 }
 
-double Render::getDoubleRenderBeginning() const noexcept
+float Render::getDoubleRenderBeginning() const noexcept
 {
     return 2e4;
 }
@@ -138,11 +139,11 @@ double Render::getDoubleRenderBeginning() const noexcept
 void Render::launchRendering() noexcept
 {
     if(m_scale < getDoubleRenderBeginning())
-        mandelbrotRendererPrimitive<float>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
+        mandelbrotRendererPrimitive<float>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished, m_mutexForBoolean);
     else if(m_scale < getLongDoubleRenderBeginning())
-        mandelbrotRendererPrimitive<double>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
+        mandelbrotRendererPrimitive<double>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished, m_mutexForBoolean);
     else
-        mandelbrotRendererPrimitive<__float128>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished);
+        mandelbrotRendererPrimitive<__float128>(m_data, m_imageSize, m_scale, m_detailLevel, m_normalizedPosition, m_threadRun, m_isRenderingFinished, m_mutexForBoolean);
 }
 
 void Render::launchAllThread()
