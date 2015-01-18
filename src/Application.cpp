@@ -268,6 +268,7 @@ void Application::toggleAutoAdjust()
 void Application::refresh()
 {
     m_fractaleRenderer.performRendering();
+    m_changeTexture = true;
 }
 
 void Application::video()
